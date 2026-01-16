@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: integrator-service
+    profiles: dev
+  data:
+    mongodb:
+      host: ${MONGODB_HOST:localhost}
+      port: 27017
+      database: mydatabase
+      username: root
+      password: secret
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: 6379
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost}:9092
+    consumer:
+      group-id: api-gateways
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+server:
+  port: 8081

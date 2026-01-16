@@ -1,0 +1,20 @@
+apply from: "$rootDir/gradle/service-template.gradle"
+
+jib {
+  from {
+    image = 'public.ecr.aws/amazoncorretto/amazoncorretto:21'
+  }
+  to {
+    image = 'integrator-service:latest'
+  }
+  container {
+    environment = ['MONGODB_HOST':'mongodb', 'REDIS_HOST' : 'redis', 'KAFKA_BOOTSTRAP_SERVERS' : 'kafka']
+    ports = ['8081']
+    jvmFlags = ['-XX:+UseContainerSupport']
+  }
+}
+
+
+bootJar {
+  mainClass = 'com.fachri.bproject.IntegratorApplication'
+}
