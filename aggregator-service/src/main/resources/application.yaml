@@ -3,7 +3,7 @@ spring:
     name: aggregator-service
   data:
     mongodb:
-      host: ${MONGODB_HOST:localhost}
+      host: 127.0.0.1
       port: 27017
       database: mydatabase
       username: root

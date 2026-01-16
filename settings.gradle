@@ -2,3 +2,4 @@ rootProject.name = 'bproject'
 
 include 'integrator-service'
 include 'aggregator-service'
+include 'common-module'
