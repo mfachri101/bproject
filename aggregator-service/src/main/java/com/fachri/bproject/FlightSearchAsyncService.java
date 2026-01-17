@@ -7,6 +7,8 @@ import com.fachri.bproject.repository.FlightItineraryRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -43,11 +45,8 @@ public class FlightSearchAsyncService {
   }
 
   // 3. The Kafka Listener that receives the "Done" signal
-  @KafkaListener(topics = "flight-search-results", groupId = "api-gateways")
-  public void onSearchResultReceived(ConsumerRecord<String, List<String>> record) {
-    String searchId = record.key();
-    List<String> mongoKeys = record.value(); // These are the IDs to find in MongoDB
-
+  @KafkaListener(topics = "provider-response-topic", groupId = "api-gateways")
+  public void onSearchResultReceived(@Header(KafkaHeaders.RECEIVED_KEY) String searchId, List<String> mongoKeys) {
     CompletableFuture<FlightSearchResponse> future = pendingRequests.get(searchId);
 
     if (future != null) {

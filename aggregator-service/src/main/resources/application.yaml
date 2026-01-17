@@ -8,13 +8,26 @@ spring:
       database: mydatabase
       username: root
       password: secret
+      authentication-database: admin
   redis:
     host: ${REDIS_HOST:localhost}
     port: 6379
   kafka:
     bootstrap-servers: ${KAFKA_HOST:localhost}:9092
     consumer:
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: '*'
+            value:
+              type: java.util.List<String>
       group-id: api-gateways
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     producer:
+      group-id: api-gateways
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

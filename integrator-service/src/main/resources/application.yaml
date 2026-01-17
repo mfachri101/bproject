@@ -9,15 +9,29 @@ spring:
       database: mydatabase
       username: root
       password: secret
+      authentication-database: admin
   redis:
     host: ${REDIS_HOST:localhost}
     port: 6379
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost}:9092
-    consumer:
+    producer:
       group-id: api-gateways
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: '*'
+            value:
+              type: com.fachri.bproject.model.FlightSearchRequest
+      group-id: api-gateways
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
 
 server:
   port: 8081

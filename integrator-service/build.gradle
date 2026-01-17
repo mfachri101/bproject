@@ -1,5 +1,9 @@
 apply from: "$rootDir/gradle/service-template.gradle"
 
+dependencies {
+  implementation project(":common-module")
+}
+
 jib {
   from {
     image = 'public.ecr.aws/amazoncorretto/amazoncorretto:21'
@@ -12,9 +16,4 @@ jib {
     ports = ['8081']
     jvmFlags = ['-XX:+UseContainerSupport']
   }
-}
-
-
-bootJar {
-  mainClass = 'com.fachri.bproject.IntegratorApplication'
 }
