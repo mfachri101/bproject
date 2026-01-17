@@ -23,7 +23,6 @@ import java.util.concurrent.CompletableFuture;
       @RequestBody FlightSearchRequest request
     ) {
       return searchService.performAsyncSearch(request)
-        .thenApply(ResponseEntity::ok)
-        .exceptionally(ex -> ResponseEntity.status(504).build());
+        .thenApply(ResponseEntity::ok);
     }
 }

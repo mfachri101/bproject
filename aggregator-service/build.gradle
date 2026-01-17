@@ -12,7 +12,7 @@ jib {
     image = 'aggregator-service:latest'
   }
   container {
-    environment = ['MONGODB_HOST':'mongodb', 'REDIS_HOST' : 'redis', 'KAFKA_BOOTSTRAP_SERVERS' : 'kafka']
+    environment = ['MONGODB_HOST':'mongodb', 'REDIS_HOST' : 'redis', 'KAFKA_BOOTSTRAP_SERVERS' : 'broker']
     ports = ['8080']
     jvmFlags = ['-XX:+UseContainerSupport']
   }

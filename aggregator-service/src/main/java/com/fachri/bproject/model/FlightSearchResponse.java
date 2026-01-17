@@ -16,4 +16,7 @@ public class FlightSearchResponse {
   // The "Dictionary" to resolve IDs on the frontend
   private Map<String, Airport> airportMap;
   private Map<String, Airline> airlineMap;
+
+  // Error message, if any
+  private String errorMessage;
 }
