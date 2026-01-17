@@ -9,7 +9,14 @@ import com.fachri.bproject.repository.AirlineRepository;
 import com.fachri.bproject.repository.AirportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.*;
+
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,8 +61,18 @@ public class FlightArbitrageService {
       }
     }
 
-    Map<String, Airport> airportIdToName = airlineRepository.findNamesByIds(airportCodes);
-    Map<String, Airline> airlineIdToName = airportRepository.findNamesByIds(airlineIds);
+    Map<String, Airport> airportIdToName = airportCodes.stream().map(
+        airportRepository::findById
+      )
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .collect(Collectors.toMap(Airport::getId, airport -> airport));
+    Map<String, Airline> airlineIdToName = airlineIds.stream().map(
+        airlineRepository::findById
+      )
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .collect(Collectors.toMap(Airline::getId, airline -> airline));
 
     return FlightSearchResponse.builder()
       .itineraries(sortedResults)

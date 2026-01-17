@@ -30,5 +30,13 @@
   {
     "_id": "SQ",
     "name": "Singapore Airlines"
+  },
+  {
+    "_id": "GA",
+    "name": "Garuda Indonesia"
+  },
+  {
+  "_id" : "QR",
+  "name" : "Qatar Airways"
   }
 ]

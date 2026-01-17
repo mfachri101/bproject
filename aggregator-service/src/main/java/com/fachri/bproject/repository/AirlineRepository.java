@@ -11,5 +11,4 @@ import java.util.Set;
 @Repository
 public interface AirlineRepository extends MongoRepository<Airline, String> {
   // Standard CRUD operations
-  Map<String, Airport> findNamesByIds(Set<String> airportCodes);
 }
