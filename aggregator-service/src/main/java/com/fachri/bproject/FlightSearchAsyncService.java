@@ -1,5 +1,6 @@
 package com.fachri.bproject;
 
+import com.fachri.bproject.model.Airline;
 import com.fachri.bproject.model.Airport;
 import com.fachri.bproject.model.FlightItineraries;
 import com.fachri.bproject.model.FlightSearchRequest;
@@ -9,11 +10,13 @@ import com.fachri.bproject.repository.AirportRepository;
 import com.fachri.bproject.repository.FlightItineraryRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.bson.BSONObject;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -64,8 +67,17 @@ public class FlightSearchAsyncService {
       return failed;
     }
 
+    // validate return date >= depart date (if present)
+    if (request.getReturnDate() != null) {
+      if (request.getReturnDate().isBefore(request.getDepartureDate())) {
+        CompletableFuture<FlightSearchResponse> failed = new CompletableFuture<>();
+        failed.completeExceptionally(new IllegalArgumentException("Invalid return date"));
+        return failed;
+      }
+    }
+
     // 1. Send to Kafka (returns CompletableFuture<List<String>>)
-    return kafkaProducer.sendSearchSpec(request)
+    CompletableFuture<FlightSearchResponse> departFuture = kafkaProducer.sendSearchSpec(request)
       .thenCompose(infoList -> {
         String searchId = infoList.getFirst(); // The unique ID for this search
 
@@ -77,6 +89,46 @@ public class FlightSearchAsyncService {
         return responseFuture.orTimeout(30, TimeUnit.SECONDS)
           .whenComplete((res, ex) -> pendingRequests.remove(searchId));
       });
+
+    if (request.getReturnDate() == null) {
+      return departFuture;
+    }
+
+    // Send to kafka for return trip, then combine both results
+    FlightSearchRequest returnRequest = FlightSearchRequest.builder()
+      .originCode(request.getDestinationCode())
+      .destinationCode(request.getOriginCode())
+      .departureDate(request.getReturnDate())
+      .seatClass(request.getSeatClass())
+      .paxNumber(request.getPaxNumber())
+      .build();
+
+    CompletableFuture<FlightSearchResponse> returnFuture = kafkaProducer.sendSearchSpec(returnRequest)
+      .thenCompose(infoList -> {
+        String searchId = infoList.getFirst(); // The unique ID for this search
+
+        // 2. Create a "promise" that will be completed when the response Kafka message arrives
+        CompletableFuture<FlightSearchResponse> responseFuture = new CompletableFuture<>();
+        pendingRequests.put(searchId, responseFuture);
+
+        // Add a timeout to prevent memory leaks if Kafka never responds
+        return responseFuture.orTimeout(30, TimeUnit.SECONDS)
+          .whenComplete((res, ex) -> pendingRequests.remove(searchId));
+      });
+
+    // Combine both depart and return results
+    return departFuture.thenCombine(returnFuture, (departRes, returnRes) -> {
+      Map<String, Airport> combinedAirportMap = new HashMap<>(departRes.getAirportMap());
+      combinedAirportMap.putAll(returnRes.getAirportMap());
+      Map<String, Airline> combinedAirlineMap = new HashMap<>(departRes.getAirlineMap());
+      combinedAirlineMap.putAll(returnRes.getAirlineMap());
+      return FlightSearchResponse.builder()
+        .itineraries(departRes.getItineraries())
+        .returnItineraries(returnRes.getItineraries())
+        .airportMap(combinedAirportMap)
+        .airlineMap(combinedAirlineMap)
+        .build();
+    });
   }
 
   // 3. The Kafka Listener that receives the "Done" signal

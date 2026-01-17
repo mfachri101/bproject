@@ -11,6 +11,7 @@ import java.util.Map;
 public class FlightSearchResponse {
   // The actual search results
   private List<Itinerary> itineraries;
+  private List<Itinerary> returnItineraries;
 
   // The "Dictionary" to resolve IDs on the frontend
   private Map<String, Airport> airportMap;

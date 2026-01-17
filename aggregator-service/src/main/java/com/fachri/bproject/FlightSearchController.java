@@ -2,16 +2,13 @@ package com.fachri.bproject;
 
 import com.fachri.bproject.model.FlightSearchRequest;
 import com.fachri.bproject.model.FlightSearchResponse;
-import com.fachri.bproject.model.PaxNumber;
-import com.fachri.bproject.model.SeatClass;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
 import java.util.concurrent.CompletableFuture;
 
   @RestController
@@ -21,21 +18,10 @@ import java.util.concurrent.CompletableFuture;
 
     private final FlightSearchAsyncService searchService;
 
-    @GetMapping("/search/{src}/{dst}/{date}/{passengers}/{seatClass}")
+    @PostMapping("/search")
     public CompletableFuture<ResponseEntity<FlightSearchResponse>> search(
-      @PathVariable("src") String src,
-      @PathVariable("dst") String dst,
-      @PathVariable("date") LocalDate date,
-      @PathVariable("passengers") String passengers,
-      @PathVariable("seatClass") SeatClass seatClass
+      @RequestBody FlightSearchRequest request
     ) {
-      FlightSearchRequest request = FlightSearchRequest.builder()
-        .seatClass(seatClass)
-        .originCode(src)
-        .destinationCode(dst)
-        .paxNumber(PaxNumber.fromString(passengers))
-        .departureDate(date)
-        .build();
       return searchService.performAsyncSearch(request)
         .thenApply(ResponseEntity::ok)
         .exceptionally(ex -> ResponseEntity.status(504).build());
