@@ -1,8 +1,11 @@
 package com.fachri.bproject;
 
+import com.fachri.bproject.model.Airport;
 import com.fachri.bproject.model.FlightItineraries;
 import com.fachri.bproject.model.FlightSearchRequest;
 import com.fachri.bproject.model.FlightSearchResponse;
+import com.fachri.bproject.repository.AirlineRepository;
+import com.fachri.bproject.repository.AirportRepository;
 import com.fachri.bproject.repository.FlightItineraryRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -24,11 +27,44 @@ public class FlightSearchAsyncService {
   private final KafkaProducerService kafkaProducer;
   private final FlightItineraryRepository mongoRepository;
   private final FlightArbitrageService arbitrageService;
+  private final AirportRepository airportRepository;
+  private final AirlineRepository airlineRepository;
 
   // Use a ConcurrentHashMap to track pending requests
   private final Map<String, CompletableFuture<FlightSearchResponse>> pendingRequests = new ConcurrentHashMap<>();
 
   public CompletableFuture<FlightSearchResponse> performAsyncSearch(FlightSearchRequest request) {
+    // Validate airports
+    boolean originExists = airportRepository.existsById(request.getOriginCode());
+    boolean destinationExists = airportRepository.existsById(request.getDestinationCode());
+
+    if (!originExists || !destinationExists) {
+      CompletableFuture<FlightSearchResponse> failed = new CompletableFuture<>();
+      failed.completeExceptionally(new IllegalArgumentException("Invalid origin or destination airport"));
+      return failed;
+    }
+
+    // Validate pax numbers
+    // rules: adults >= 1, adults + children <= 7, infants <= adults, infants <= 4
+    int adults = request.getPaxNumber().getAdult();
+    int children = request.getPaxNumber().getChild();
+    int infants = request.getPaxNumber().getInfant();
+    if (adults < 1 || (adults + children) > 7 || infants > adults || infants > 4) {
+      CompletableFuture<FlightSearchResponse> failed = new CompletableFuture<>();
+      failed.completeExceptionally(new IllegalArgumentException("Invalid passenger numbers"));
+      return failed;
+    }
+
+    // validate date
+    // depart date must not be in the past, no longer than 1 year from now
+    java.time.LocalDate today = java.time.LocalDate.now();
+    java.time.LocalDate oneYearFromNow = today.plusYears(1);
+    if (request.getDepartureDate().isBefore(today) || request.getDepartureDate().isAfter(oneYearFromNow)) {
+      CompletableFuture<FlightSearchResponse> failed = new CompletableFuture<>();
+      failed.completeExceptionally(new IllegalArgumentException("Invalid departure date"));
+      return failed;
+    }
+
     // 1. Send to Kafka (returns CompletableFuture<List<String>>)
     return kafkaProducer.sendSearchSpec(request)
       .thenCompose(infoList -> {
