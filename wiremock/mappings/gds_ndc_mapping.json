@@ -1,0 +1,9 @@
+{
+  "request": { "method": "POST", "url": "/v1/shopping/flight-offers" },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "body": "{{#parseJson 'airlines' }}[{\"code\":\"GA\",\"name\":\"Garuda\",\"basePrice\":350},{\"code\":\"SQ\",\"name\":\"Singapore\",\"basePrice\":420},{\"code\":\"QR\",\"name\":\"Qatar\",\"basePrice\":580}]{{/parseJson}}{\"data\":[{{#each airlines}}{\"type\":\"flight-offer\",\"id\":\"{{code}}_{{randomValue type='ALPHANUMERIC' length=5 uppercase=true}}\",\"itineraries\":[{\"segments\":[{\"departure\":{\"iataCode\":\"{{jsonPath request.body '$.origin'}}\",\"at\":\"{{jsonPath request.body '$.departureDate'}}T{{#if @first}}08:00{{else if (eq @index 1)}}12:30{{else}}21:15{{/if}}:00\"},\"arrival\":{\"iataCode\":\"{{jsonPath request.body '$.destination'}}\",\"at\":\"{{jsonPath request.body '$.departureDate'}}T{{#if @first}}10:30{{else if (eq @index 1)}}15:00{{else}}23:45{{/if}}:00\"},\"carrierCode\":\"{{code}}\",\"number\":\"{{randomValue type='NUMERIC' length=3}}\"}]}],\"price\":{\"currency\":\"USD\",\"total\":\"{{math basePrice '+' (randomInt lower=10 upper=50)}}.00\"}}{{#unless @last}},{{/unless}}{{/each}}]}",
+    "transformers": ["response-template"]
+  }
+}
