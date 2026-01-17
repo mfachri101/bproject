@@ -44,7 +44,7 @@ public class IntegrationProviderService {
     List<FlightInventoryRepository.FlightMetadata> cachedMetadata = mongoRepository.findMetadataByRouteKey(routeKey);
 
     List<CompletableFuture<String>> providerTasks = enabledProviders.stream()
-      .map(providerId -> processProvider(searchId, providerId, request, cachedMetadata))
+      .map(providerId -> processProvider(routeKey, providerId, request, cachedMetadata))
       .toList();
 
     // 3. Wait for all providers (Cache or Live) to complete, then return all IDs

@@ -6,9 +6,9 @@ import java.util.List;
 
 @Service
 public class RoutingConfigService {
-  // This could be backed by a DB or a Config Map
+  // This could be backed by a DB and cached for better performance
+  // For now, we return a static list of enabled providers
   public List<String> getEnabledProviders(String origin, String destination) {
-    // Logic: if international, return ["AMADEUS", "SABRE"]; if domestic, return ["SOUTHWEST"]
     return List.of("abacus-ndc", "pkfare");
   }
 }
