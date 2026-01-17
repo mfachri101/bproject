@@ -30,7 +30,13 @@ subprojects {
     annotationProcessor 'org.projectlombok:lombok'
     compileOnly 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+  }
+
+  tasks.named('test') {
+    useJUnitPlatform()
   }
 }
 
@@ -52,8 +58,4 @@ dependencyManagement {
   imports {
     mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
   }
-}
-
-tasks.named('test') {
-  useJUnitPlatform()
 }

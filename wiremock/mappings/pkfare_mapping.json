@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/pkfare/api/v1/flight/search",
+    "headers": {
+      "Authorization": {
+        "contains": "Bearer"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json",
+      "X-Provider": "PKFARE-MOCK"
+    },
+    "bodyFileName": "pkfare_template.txt",
+    "transformers": ["response-template"],
+    "fixedDelayMilliseconds": 1500
+  }
+}

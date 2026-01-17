@@ -9,6 +9,6 @@ public class RoutingConfigService {
   // This could be backed by a DB or a Config Map
   public List<String> getEnabledProviders(String origin, String destination) {
     // Logic: if international, return ["AMADEUS", "SABRE"]; if domestic, return ["SOUTHWEST"]
-    return List.of("AMADEUS", "SABRE");
+    return List.of("abacus-ndc", "pkfare");
   }
 }

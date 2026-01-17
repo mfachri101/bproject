@@ -35,3 +35,9 @@ spring:
 
 server:
   port: 8081
+
+integration:
+  abacus-ndc:
+    baseUrl: ${ABACUS_NDC_BASE_URL:http://localhost:9090}
+  pkfare:
+    baseUrl: ${PKFARE_BASE_URL:http://localhost:9090}

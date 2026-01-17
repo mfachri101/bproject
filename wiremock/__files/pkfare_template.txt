@@ -1,0 +1,45 @@
+{
+  "status": "SUCCESS",
+  "msg": "Success",
+  "data": {
+    "shoppingId": "PK_{{randomValue type='ALPHANUMERIC' length=12}}",
+    "solutions": [
+      {{#parseJson 'providers'}}
+      [
+        {"carrier": "GA", "cabin": "ECONOMY", "price": 450, "refund": "true"},
+        {"carrier": "SQ", "cabin": "BUSINESS", "price": 1200, "refund": "false"}
+      ]
+      {{/parseJson}}
+      {{#each providers}}
+      {
+        "solutionId": "SOL_{{@index}}_{{randomValue type='ALPHANUMERIC' length=8}}",
+        "flights": [
+          {
+            "segments": [
+              {
+                "depCity": "{{jsonPath request.body '$.origin'}}",
+                "arrCity": "{{jsonPath request.body '$.destination'}}",
+                "depTime": "{{jsonPath request.body '$.departureDate'}} 10:00:00",
+                "arrTime": "{{jsonPath request.body '$.departureDate'}} 12:30:00",
+                "marketingCarrier": "{{carrier}}",
+                "flightNo": "{{randomValue type='NUMERIC' length=3}}",
+                "cabin": "{{cabin}}"
+              }
+            ]
+          }
+        ],
+        "pricing": {
+          "currency": "USD",
+          "adultPrice": {{price}},
+          "adultTax": 45,
+          "totalPrice": {{math price '+' 45}}
+        },
+        "policy": {
+          "isRefundable": {{refund}},
+          "baggage": "1PC"
+        }
+      }{{#unless @last}},{{/unless}}
+      {{/each}}
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "request": { "method": "POST", "url": "/v1/shopping/flight-offers" },
+  "request": { "method": "POST", "url": "/gds-ndc/v1/shopping/flight-offers" },
   "response": {
     "status": 200,
     "headers": { "Content-Type": "application/json" },

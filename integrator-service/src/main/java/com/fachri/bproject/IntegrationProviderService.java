@@ -1,5 +1,6 @@
 package com.fachri.bproject;
 
+import com.fachri.bproject.integration.ProviderIntegration;
 import com.fachri.bproject.model.FlightItineraries;
 import com.fachri.bproject.model.FlightSearchRequest;
 import com.fachri.bproject.repository.FlightInventoryRepository;
@@ -12,6 +13,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -24,7 +26,7 @@ public class IntegrationProviderService {
 
   private final RoutingConfigService routingConfig;
   private final FlightInventoryRepository mongoRepository;
-  private final ExternalAirlineClient airlineClient;
+  private final Map<String, ProviderIntegration> providerIntegrations; // Injected by Spring
   private final KafkaTemplate<String, Object> kafkaTemplate;
 
   private static final long STALE_THRESHOLD = 900000; // 15 mins
@@ -42,7 +44,7 @@ public class IntegrationProviderService {
     List<FlightInventoryRepository.FlightMetadata> cachedMetadata = mongoRepository.findMetadataByRouteKey(routeKey);
 
     List<CompletableFuture<String>> providerTasks = enabledProviders.stream()
-      .map(providerId -> processProvider(searchId, routeKey, request, cachedMetadata))
+      .map(providerId -> processProvider(searchId, providerId, request, cachedMetadata))
       .toList();
 
     // 3. Wait for all providers (Cache or Live) to complete, then return all IDs
@@ -60,33 +62,28 @@ public class IntegrationProviderService {
   }
 
   private CompletableFuture<String> processProvider(String routeKey, String providerId,
-    FlightSearchRequest request, List<FlightInventoryRepository.FlightMetadata> cachedMetadata) {
+                                                    FlightSearchRequest request, List<FlightInventoryRepository.FlightMetadata> cachedMetadata) {
 
-    return CompletableFuture.supplyAsync(() -> {
-      // Check if this specific provider has fresh data in cache
-      Optional<FlightInventoryRepository.FlightMetadata> meta = cachedMetadata.stream()
-        .filter(m -> m.getProviderId().equals(providerId))
-        .findFirst();
+    Optional<FlightInventoryRepository.FlightMetadata> meta = cachedMetadata.stream()
+      .filter(m -> m.getProviderId().equals(providerId))
+      .findFirst();
 
-      if (meta.isPresent() && !isStale(meta.get().getLastUpdated())) {
-        // CACHE HIT: Return the existing ID immediately
-        return meta.get().getId();
-      } else {
-        // CACHE MISS / STALE: Fetch Live
-        try {
-          FlightItineraries freshData = airlineClient.fetchFromProvider(providerId, request);
+    if (meta.isPresent() && !isStale(meta.get().getLastUpdated())) {
+      return CompletableFuture.completedFuture(meta.get().getId());
+    } else {
+      ProviderIntegration provider = providerIntegrations.get(providerId);
+      if (provider == null) return CompletableFuture.completedFuture(null);
+
+      return provider.fetch(request)
+        .thenApply(integrationResponse -> {
+          FlightItineraries freshData = integrationResponse.toFlightItineraries();
           freshData.setRouteKey(routeKey);
           freshData.setProviderId(providerId);
           freshData.setLastUpdated(System.currentTimeMillis());
-
-          // Save and return the new ID
-          String id = mongoRepository.save(freshData).getId();
-          return id;
-        } catch (Exception e) {
-          return null; // Handle provider failure
-        }
-      }
-    });
+          return mongoRepository.save(freshData).getId();
+        })
+        .exceptionally(e -> null);
+    }
   }
 
   private boolean isStale(long lastUpdated) {

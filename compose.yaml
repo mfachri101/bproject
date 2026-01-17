@@ -32,7 +32,7 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-  gds-mock:
+  provider-mock:
     image: wiremock/wiremock:latest
     container_name: gds_mock
     ports:
