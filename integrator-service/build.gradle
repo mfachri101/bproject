@@ -2,6 +2,9 @@ apply from: "$rootDir/gradle/service-template.gradle"
 
 dependencies {
   implementation project(":common-module")
+
+  // wiremock for testing
+  testImplementation "org.wiremock:wiremock-standalone:3.3.1"
 }
 
 jib {
