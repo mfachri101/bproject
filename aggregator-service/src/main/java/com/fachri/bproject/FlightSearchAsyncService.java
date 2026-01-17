@@ -28,7 +28,6 @@ public class FlightSearchAsyncService {
   private final FlightItineraryRepository mongoRepository;
   private final FlightArbitrageService arbitrageService;
   private final AirportRepository airportRepository;
-  private final AirlineRepository airlineRepository;
 
   // Use a ConcurrentHashMap to track pending requests
   private final Map<String, CompletableFuture<FlightSearchResponse>> pendingRequests = new ConcurrentHashMap<>();
