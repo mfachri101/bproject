@@ -14,7 +14,7 @@ spring:
     host: ${REDIS_HOST:localhost}
     port: 6379
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:broker:29092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
     producer:
       group-id: api-gateways
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
